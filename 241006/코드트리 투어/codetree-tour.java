@@ -116,7 +116,8 @@ public class Main {
                 } else if(q == 500) {
                     startN = Integer.parseInt(st.nextToken());
                     // 출발지가 바뀌었으므로, 다익스트라 결과 무효화
-                    Arrays.fill(dist, MAX_V);
+                    if(dist != null)
+                        Arrays.fill(dist, MAX_V);
                 }
             }
         }
