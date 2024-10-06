@@ -90,14 +90,16 @@ public class Main {
                     items = tmp;
                 // 최적의 여행 상품 뽑기
                 } else if(q == 400) {
-                    // 최적의 거리 계산하기 - 없다면 -1 출력
+                    // 다익스트라로 한 번만 최단 경로 계산
+                    dijkstra();
+                    
                     PriorityQueue<Item> tmp = new PriorityQueue<>();
 
                     while(!items.isEmpty()) {
                         Item it = items.poll();
                         if(it.rev != -1) {
-                            // 다익스트라로 최단 거리 계산
-                            it.cost = dijkstra(it.dest);
+                            // 이미 계산된 다익스트라 결과로 비용 설정
+                            it.cost = dist[it.dest];
                         }
                         tmp.add(it);
                     }
@@ -110,17 +112,21 @@ public class Main {
                             System.out.println(-1);
                         } else System.out.println(items.poll().id);
                     } else System.out.println(-1);
-                // 출발지 변경 - 거리 값이 바뀔 수 있다.
+                // 출발지 변경 - 다익스트라 다시 수행 필요
                 } else if(q == 500) {
                     startN = Integer.parseInt(st.nextToken());
+                    // 출발지가 바뀌었으므로, 다익스트라 결과 무효화
+                    Arrays.fill(dist, MAX_V);
                 }
             }
-
         }
     }
 
     // 다익스트라 알고리즘
-    static int dijkstra(int end) {
+    static void dijkstra() {
+        // 이미 계산된 경우 건너뜀
+        if (dist != null && dist[startN] != MAX_V) return;
+
         dist = new int[n];
         Arrays.fill(dist, MAX_V);
         PriorityQueue<Edge> pq = new PriorityQueue<>((a, b) -> Integer.compare(a.w, b.w));
@@ -141,6 +147,5 @@ public class Main {
                 }
             }
         }
-        return dist[end];
     }
 }
