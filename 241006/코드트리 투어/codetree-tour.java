@@ -3,9 +3,9 @@ import java.io.*;
 
 public class Main {
     static List<Edge>[] eList;
-    static int MAX_L = 30005;
+    static int MAX_L = 31;
     final static int MAX_V = 9_999_999;
-    static Item[] items = new Item[MAX_L];
+    static List<Item> items = new ArrayList<>();
     static boolean[] visited;
     static int result; //dfs 결과 기록
     static int n; //노드 개수
@@ -44,8 +44,6 @@ public class Main {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         int Q = Integer.parseInt(br.readLine());
 
-        for(int i = 0; i < MAX_L; i++) items[i] = new Item();
-
         for(int i = 0; i < Q; i++) {
             if(i == 0) {
                 StringTokenizer st = new StringTokenizer(br.readLine());
@@ -74,16 +72,20 @@ public class Main {
                     int id = Integer.parseInt(st.nextToken());
                     int rev = Integer.parseInt(st.nextToken());
                     int des = Integer.parseInt(st.nextToken());
-                    items[id].id = id;
-                    items[id].rev = rev;
-                    items[id].dest = des;
+                    
+                    Item newN = new Item();
+                    newN.id = id;
+                    newN.rev = rev;
+                    newN.dest = des;
+                    items.add(newN);
                 //상품 취소  
                 } else if(q == 300) {
                     int id = Integer.parseInt(st.nextToken());
 
                     for(int j = 0; j < MAX_L; j++) {
-                        if(items[j].id == id) {
-                            items[j] = new Item();
+                        Item tmp = items.get(j);
+                        if(tmp != null && tmp.id == id) {
+                            items.remove(tmp);
                             break;
                         }
                     }
@@ -91,24 +93,26 @@ public class Main {
                 //최적의 여행 상품 뽑기
                 } else if(q == 400) {
                     //최적의 거리 계산하기 - 없다면 -1 출력
-                    for(int j = 0; j < MAX_L; j++) {
-                        if(items[j].rev != -1) {
+                    for(int j = 0; j < items.size(); j++) {
+                        Item tmp = items.get(j);
+                        if(tmp != null && tmp.rev != -1) {
                             result = MAX_V;
                             visited = new boolean[n];
-                            dfs(items[j].dest, startN, 0);
-                            items[j].cost = result;
+                            dfs(tmp.dest, startN, 0);
+                            tmp.cost = result;
                         } 
                     }
 
-                    Arrays.sort(items);
+                    Collections.sort(items);
+                    Item tmp = items.get(0);
 
-                    if(items[0].id == MAX_L || items[0].cost == MAX_V) System.out.println(-1);
-                    else if((items[0].rev - items[0].cost) < 0) System.out.println(-1);
+                    if(tmp == null || tmp.id == MAX_L || tmp.cost == MAX_V) System.out.println(-1);
+                    else if((tmp.rev - tmp.cost) <= 0) System.out.println(-1);
                     else {
-                        System.out.println(items[0].id);
-                        items[0].cost = MAX_V;
-                        items[0].rev = -1;
-                        Arrays.sort(items);
+                        System.out.println(tmp.id);
+                        tmp.cost = MAX_V;
+                        tmp.rev = -1;
+                        Collections.sort(items);
                     }
                 //출발지 변경 - 거리 값이 바뀔 수 있다.
                 } else if(q == 500) {
