@@ -108,6 +108,7 @@ public class Main {
                         System.out.println(items[0].id);
                         items[0].cost = MAX_V;
                         items[0].rev = -1;
+                        Arrays.sort(items);
                     }
                 //출발지 변경 - 거리 값이 바뀔 수 있다.
                 } else if(q == 500) {
