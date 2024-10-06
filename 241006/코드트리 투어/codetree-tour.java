@@ -6,6 +6,7 @@ public class Main {
     static int MAX_L = 30005;
     final static int MAX_V = 9_999_999;
     static PriorityQueue<Item> items = new PriorityQueue<>();
+    static Set<Integer> idSet = new HashSet<>(); // 삭제된 id를 저장하는 Set
     static int[] dist; // 다익스트라 결과 기록
     static int n; // 노드 개수
     static int startN = 0;
@@ -18,7 +19,7 @@ public class Main {
         
         @Override
         public int compareTo(Item o) {
-            if((rev - cost) == (o.rev - o.cost)) return Integer.compare(id, o.id);
+            if ((rev - cost) == (o.rev - o.cost)) return Integer.compare(id, o.id);
             return Integer.compare(o.rev - o.cost, rev - cost);
         }
 
@@ -42,90 +43,59 @@ public class Main {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         int Q = Integer.parseInt(br.readLine());
 
-        for(int i = 0; i < Q; i++) {
-            if(i == 0) {
-                StringTokenizer st = new StringTokenizer(br.readLine());
-                Integer.parseInt(st.nextToken());
-                n = Integer.parseInt(st.nextToken());
-                int m = Integer.parseInt(st.nextToken());
-                
-                eList = new List[n];
-                for(int j = 0; j < n; j++) eList[j] = new ArrayList<>();
+        for (int i = 0; i < Q; i++) {
+            StringTokenizer st = new StringTokenizer(br.readLine());
+            int query = Integer.parseInt(st.nextToken());
 
-                // 간선정보
-                for(int j = 0; j < m; j++) {
-                    int u = Integer.parseInt(st.nextToken());
-                    int v = Integer.parseInt(st.nextToken());
-                    int w = Integer.parseInt(st.nextToken());
-                    // 양방향 간선
-                    eList[u].add(new Edge(v, w));
-                    eList[v].add(new Edge(u, w));
+            // 여행 생성
+            if (query == 200) {
+                int id = Integer.parseInt(st.nextToken());
+                int rev = Integer.parseInt(st.nextToken());
+                int des = Integer.parseInt(st.nextToken());
+
+                Item newN = new Item();
+                newN.id = id;
+                newN.rev = rev;
+                newN.dest = des;
+                items.add(newN);
+                idSet.add(id); // id를 추가
+            }
+            // 상품 취소
+            else if (query == 300) {
+                int id = Integer.parseInt(st.nextToken());
+                idSet.remove(id);  // Set에서 해당 id를 삭제
+            }
+            // 최적의 여행 상품 뽑기
+            else if (query == 400) {
+                // Set에 없는 원소들을 힙에서 제거
+                while (!items.isEmpty() && !idSet.contains(items.peek().id)) {
+                    items.poll();
                 }
-            } else {
-                StringTokenizer st = new StringTokenizer(br.readLine());
-                int q = Integer.parseInt(st.nextToken());
 
-                // 여행 생성
-                if(q == 200) {
-                    int id = Integer.parseInt(st.nextToken());
-                    int rev = Integer.parseInt(st.nextToken());
-                    int des = Integer.parseInt(st.nextToken());
-                    
-                    Item newN = new Item();
-                    newN.id = id;
-                    newN.rev = rev;
-                    newN.dest = des;
-                    items.add(newN);
-                // 상품 취소  
-                } else if(q == 300) {
-                    int id = Integer.parseInt(st.nextToken());
-                    
-                    PriorityQueue<Item> tmp = new PriorityQueue<>();
+                if (!items.isEmpty()) {
+                    Item it = items.poll();
 
-                    while(!items.isEmpty()) {
-                        Item it = items.poll();
-                        if(it.id != id)
-                            tmp.add(it);
+                    if ((it.rev - it.cost) > 0) {
+                        System.out.println(-1);
+                        items.add(it);  // 다시 추가
+                    } else {
+                        System.out.println(it.id);
                     }
-                    items = tmp;
-                // 최적의 여행 상품 뽑기
-                } else if(q == 400) {
-                    // 다익스트라로 한 번만 최단 경로 계산
-                    dijkstra();
-                    
-                    PriorityQueue<Item> tmp = new PriorityQueue<>();
-
-                    while(!items.isEmpty()) {
-                        Item it = items.poll();
-                        if(it.rev != -1) {
-                            // 이미 계산된 다익스트라 결과로 비용 설정
-                            it.cost = dist[it.dest];
-                        }
-                        tmp.add(it);
-                    }
-                    items = tmp;
-
-                    if(!items.isEmpty()) {
-                        Item it = items.peek();
-
-                        if(it == null || it.id == MAX_L || it.cost == MAX_V || (it.rev - it.cost) < 0) { 
-                            System.out.println(-1);
-                        } else System.out.println(items.poll().id);
-                    } else System.out.println(-1);
-                // 출발지 변경 - 다익스트라 다시 수행 필요
-                } else if(q == 500) {
-                    startN = Integer.parseInt(st.nextToken());
-                    // 출발지가 바뀌었으므로, 다익스트라 결과 무효화
-                    if(dist != null)
-                        Arrays.fill(dist, MAX_V);
+                } else {
+                    System.out.println(-1);
                 }
+            }
+            // 출발지 변경
+            else if (query == 500) {
+                startN = Integer.parseInt(st.nextToken());
+                if(dist != null)
+                    Arrays.fill(dist, MAX_V);
             }
         }
     }
 
     // 다익스트라 알고리즘
     static void dijkstra() {
-        // 이미 계산된 경우 건너뜀
         if (dist != null && dist[startN] != MAX_V) return;
 
         dist = new int[n];
