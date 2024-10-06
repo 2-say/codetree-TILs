@@ -3,7 +3,7 @@ import java.io.*;
 
 public class Main {
     static List<Edge>[] eList;
-    static int MAX_L = 7;
+    static int MAX_L = 30005;
     final static int MAX_V = 9_999_999;
     static Item[] items = new Item[MAX_L];
     static boolean[] visited;
