@@ -5,7 +5,7 @@ public class Main {
     static List<Edge>[] eList;
     static int MAX_L = 30005;
     final static int MAX_V = 9_999_999;
-    static List<Item> items = new ArrayList<>();
+    static PriorityQueue<Item> items = new PriorityQueue<>();
     static boolean[] visited;
     static int result; //dfs 결과 기록
     static int n; //노드 개수
@@ -81,41 +81,38 @@ public class Main {
                 //상품 취소  
                 } else if(q == 300) {
                     int id = Integer.parseInt(st.nextToken());
+                    
+                    PriorityQueue<Item> tmp = new PriorityQueue<>();
 
-                    for(int j = 0; j < items.size(); j++) {
-                        Item tmp = items.get(j);
-                        if(tmp != null && tmp.id == id) {
-                            items.remove(tmp);
-                            break;
-                        }
+                    while(!items.isEmpty()) {
+                        Item it = items.poll();
+                        if(it.id != id)
+                            tmp.add(it);
                     }
-
+                    items = tmp;
                 //최적의 여행 상품 뽑기
                 } else if(q == 400) {
                     //최적의 거리 계산하기 - 없다면 -1 출력
-                    for(int j = 0; j < items.size(); j++) {
-                        Item tmp = items.get(j);
-                        if(tmp != null && tmp.rev != -1) {
+                    PriorityQueue<Item> tmp = new PriorityQueue<>();
+
+                    while(!items.isEmpty()) {
+                        Item it = items.poll();
+                        if(it.rev != -1) {
                             result = MAX_V;
                             visited = new boolean[n];
-                            dfs(tmp.dest, startN, 0);
-                            tmp.cost = result;
-                        } 
-                    }
-
-                    Collections.sort(items);
-                    if(items.size() > 0) {
-                        Item tmp = items.get(0);
-                        //System.out.println(items.toString());
-
-                        if(tmp == null || tmp.id == MAX_L || tmp.cost == MAX_V) System.out.println(-1);
-                        else if((tmp.rev - tmp.cost) < 0) System.out.println(-1);
-                        else {
-                            System.out.println(tmp.id);
-                            tmp.cost = MAX_V;
-                            tmp.rev = -1;
-                            Collections.sort(items);
+                            dfs(it.dest, startN, 0);
+                            it.cost = result;
                         }
+                        tmp.add(it);
+                    }
+                    items = tmp;
+
+                    if(!items.isEmpty()) {
+                        Item it = items.peek();
+
+                        if(it == null || it.id == MAX_L || it.cost == MAX_V || (it.rev - it.cost) < 0) { 
+                            System.out.println(-1);
+                        } else System.out.println(items.poll().id);
                     } else System.out.println(-1);
                 //출발지 변경 - 거리 값이 바뀔 수 있다.
                 } else if(q == 500) {
