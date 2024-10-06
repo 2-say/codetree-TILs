@@ -104,17 +104,19 @@ public class Main {
                     }
 
                     Collections.sort(items);
-                    Item tmp = items.get(0);
-                    //System.out.println(items.toString());
+                    if(items.size() > 0) {
+                        Item tmp = items.get(0);
+                        //System.out.println(items.toString());
 
-                    if(tmp == null || tmp.id == MAX_L || tmp.cost == MAX_V) System.out.println(-1);
-                    else if((tmp.rev - tmp.cost) < 0) System.out.println(-1);
-                    else {
-                        System.out.println(tmp.id);
-                        tmp.cost = MAX_V;
-                        tmp.rev = -1;
-                        Collections.sort(items);
-                    }
+                        if(tmp == null || tmp.id == MAX_L || tmp.cost == MAX_V) System.out.println(-1);
+                        else if((tmp.rev - tmp.cost) < 0) System.out.println(-1);
+                        else {
+                            System.out.println(tmp.id);
+                            tmp.cost = MAX_V;
+                            tmp.rev = -1;
+                            Collections.sort(items);
+                        }
+                    } else System.out.println(-1);
                 //출발지 변경 - 거리 값이 바뀔 수 있다.
                 } else if(q == 500) {
                     startN = Integer.parseInt(st.nextToken());
