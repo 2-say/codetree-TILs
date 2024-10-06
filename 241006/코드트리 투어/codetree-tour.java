@@ -6,9 +6,8 @@ public class Main {
     static int MAX_L = 30005;
     final static int MAX_V = 9_999_999;
     static PriorityQueue<Item> items = new PriorityQueue<>();
-    static boolean[] visited;
-    static int result; //dfs 결과 기록
-    static int n; //노드 개수
+    static int[] dist; // 다익스트라 결과 기록
+    static int n; // 노드 개수
     static int startN = 0;
 
     static class Item implements Comparable<Item> {
@@ -19,7 +18,7 @@ public class Main {
         
         @Override
         public int compareTo(Item o) {
-            if((rev - cost) == (o.rev - o.cost))return Integer.compare(id, o.id);
+            if((rev - cost) == (o.rev - o.cost)) return Integer.compare(id, o.id);
             return Integer.compare(o.rev - o.cost, rev - cost);
         }
 
@@ -28,7 +27,6 @@ public class Main {
             return "(" + id +  " "  + rev +  " " +  dest + " " + cost + ")";
         }
     }
-
 
     static class Edge {
         int v;
@@ -54,12 +52,12 @@ public class Main {
                 eList = new List[n];
                 for(int j = 0; j < n; j++) eList[j] = new ArrayList<>();
 
-                //간선정보
+                // 간선정보
                 for(int j = 0; j < m; j++) {
                     int u = Integer.parseInt(st.nextToken());
                     int v = Integer.parseInt(st.nextToken());
                     int w = Integer.parseInt(st.nextToken());
-                    //양방향 간선
+                    // 양방향 간선
                     eList[u].add(new Edge(v, w));
                     eList[v].add(new Edge(u, w));
                 }
@@ -67,7 +65,7 @@ public class Main {
                 StringTokenizer st = new StringTokenizer(br.readLine());
                 int q = Integer.parseInt(st.nextToken());
 
-                //여행 생성
+                // 여행 생성
                 if(q == 200) {
                     int id = Integer.parseInt(st.nextToken());
                     int rev = Integer.parseInt(st.nextToken());
@@ -78,7 +76,7 @@ public class Main {
                     newN.rev = rev;
                     newN.dest = des;
                     items.add(newN);
-                //상품 취소  
+                // 상품 취소  
                 } else if(q == 300) {
                     int id = Integer.parseInt(st.nextToken());
                     
@@ -90,18 +88,16 @@ public class Main {
                             tmp.add(it);
                     }
                     items = tmp;
-                //최적의 여행 상품 뽑기
+                // 최적의 여행 상품 뽑기
                 } else if(q == 400) {
-                    //최적의 거리 계산하기 - 없다면 -1 출력
+                    // 최적의 거리 계산하기 - 없다면 -1 출력
                     PriorityQueue<Item> tmp = new PriorityQueue<>();
 
                     while(!items.isEmpty()) {
                         Item it = items.poll();
                         if(it.rev != -1) {
-                            result = MAX_V;
-                            visited = new boolean[n];
-                            dfs(it.dest, startN, 0);
-                            it.cost = result;
+                            // 다익스트라로 최단 거리 계산
+                            it.cost = dijkstra(it.dest);
                         }
                         tmp.add(it);
                     }
@@ -114,31 +110,37 @@ public class Main {
                             System.out.println(-1);
                         } else System.out.println(items.poll().id);
                     } else System.out.println(-1);
-                //출발지 변경 - 거리 값이 바뀔 수 있다.
+                // 출발지 변경 - 거리 값이 바뀔 수 있다.
                 } else if(q == 500) {
                     startN = Integer.parseInt(st.nextToken());
                 }
             }
 
         }
-
-
     }
 
-    static void dfs(int end, int cur, int cost) {
-        if(end == cur) {
-            result = Math.min(cost, result);
-            return;
-        }
+    // 다익스트라 알고리즘
+    static int dijkstra(int end) {
+        dist = new int[n];
+        Arrays.fill(dist, MAX_V);
+        PriorityQueue<Edge> pq = new PriorityQueue<>((a, b) -> Integer.compare(a.w, b.w));
+        dist[startN] = 0;
+        pq.add(new Edge(startN, 0));
 
-        for(Edge next : eList[cur]) {
-            if(!visited[next.v]) {
-                visited[next.v] = true;
-                dfs(end, next.v, cost + next.w);
-                visited[next.v] = false;
+        while (!pq.isEmpty()) {
+            Edge cur = pq.poll();
+            int v = cur.v;
+            int w = cur.w;
+
+            if (w > dist[v]) continue;
+
+            for (Edge next : eList[v]) {
+                if (dist[next.v] > dist[v] + next.w) {
+                    dist[next.v] = dist[v] + next.w;
+                    pq.add(new Edge(next.v, dist[next.v]));
+                }
             }
         }
+        return dist[end];
     }
-        
-        
 }
