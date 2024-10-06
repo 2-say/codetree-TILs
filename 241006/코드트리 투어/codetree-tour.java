@@ -49,6 +49,7 @@ public class Main {
         for(int i = 0; i < Q; i++) {
             if(i == 0) {
                 StringTokenizer st = new StringTokenizer(br.readLine());
+                Integer.parseInt(st.nextToken());
                 n = Integer.parseInt(st.nextToken());
                 int m = Integer.parseInt(st.nextToken());
                 
@@ -100,14 +101,13 @@ public class Main {
                     }
 
                     Arrays.sort(items);
-                    //System.out.println(Arrays.toString(items));
 
                     if(items[0].id == MAX_L || items[0].cost == MAX_V) System.out.println(-1);
+                    else if((items[0].rev - items[0].cost) < 0) System.out.println(-1);
                     else {
                         System.out.println(items[0].id);
                         items[0].cost = MAX_V;
-                        Arrays.sort(items);
-                        System.out.println(Arrays.toString(items));
+                        items[0].rev = -1;
                     }
                 //출발지 변경 - 거리 값이 바뀔 수 있다.
                 } else if(q == 500) {
@@ -116,6 +116,8 @@ public class Main {
             }
 
         }
+
+
     }
 
     static void dfs(int end, int cur, int cost) {
