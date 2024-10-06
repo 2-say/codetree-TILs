@@ -32,11 +32,6 @@ public class Main {
             this.color = color;
             this.colorLastUpdate = updateTime;
         }
-
-        @Override
-        public String toString() {
-            return "(" + pid + " " + maxDepth + " " + color +  ")" ; 
-        }
     }
 
     public static void main(String[] args) throws IOException {
@@ -51,8 +46,6 @@ public class Main {
             StringTokenizer st = new StringTokenizer(br.readLine());
             int command = Integer.parseInt(st.nextToken());
             
-            //System.out.println(Arrays.toString(nodes));
-
             //노드 추가
             if(command == 100) {
                 int mid = Integer.parseInt(st.nextToken());
@@ -93,6 +86,7 @@ public class Main {
             Node p = nodes[pid];
             if(p.maxDepth <= needDepth) return false;
             pid = p.pid;
+            needDepth++;
         }
         return true;
     }
