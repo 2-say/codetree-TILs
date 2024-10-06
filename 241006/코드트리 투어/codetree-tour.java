@@ -3,7 +3,7 @@ import java.io.*;
 
 public class Main {
     static List<Edge>[] eList;
-    static int MAX_L = 31;
+    static int MAX_L = 30005;
     final static int MAX_V = 9_999_999;
     static List<Item> items = new ArrayList<>();
     static boolean[] visited;
@@ -82,7 +82,7 @@ public class Main {
                 } else if(q == 300) {
                     int id = Integer.parseInt(st.nextToken());
 
-                    for(int j = 0; j < MAX_L; j++) {
+                    for(int j = 0; j < items.size(); j++) {
                         Item tmp = items.get(j);
                         if(tmp != null && tmp.id == id) {
                             items.remove(tmp);
@@ -105,9 +105,10 @@ public class Main {
 
                     Collections.sort(items);
                     Item tmp = items.get(0);
+                    //System.out.println(items.toString());
 
                     if(tmp == null || tmp.id == MAX_L || tmp.cost == MAX_V) System.out.println(-1);
-                    else if((tmp.rev - tmp.cost) <= 0) System.out.println(-1);
+                    else if((tmp.rev - tmp.cost) < 0) System.out.println(-1);
                     else {
                         System.out.println(tmp.id);
                         tmp.cost = MAX_V;
