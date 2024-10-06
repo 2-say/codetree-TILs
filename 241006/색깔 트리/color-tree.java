@@ -7,6 +7,7 @@ public class Main {
     static boolean[] isRoot;
     static int Q;
     static Map<Integer, Integer> colorMap;
+    static final int MAX_ID = 100005;
 
     static class Node {
         int pid;
@@ -43,8 +44,8 @@ public class Main {
         Q = Integer.parseInt(br.readLine());
         
         // Q 범위 필요
-        nodes = new Node[Q];
-        isRoot = new boolean[Q];
+        nodes = new Node[MAX_ID];
+        isRoot = new boolean[MAX_ID];
 
         for(int i = 0; i < Q; i++) {
             StringTokenizer st = new StringTokenizer(br.readLine());
@@ -58,6 +59,7 @@ public class Main {
                 int pid = Integer.parseInt(st.nextToken());
                 int color = Integer.parseInt(st.nextToken());
                 int maxDepth = Integer.parseInt(st.nextToken());
+
 
                 if(pid == -1) isRoot[mid] = true;
                 //depth 체크
@@ -97,7 +99,7 @@ public class Main {
 
 
     static int getColor(int mid) {
-        for(int i = 0; i < Q; i++) {
+        for(int i = 0; i < MAX_ID; i++) {
             if(isRoot[i]) colorUpdate(i, nodes[i].color);
         }
         return nodes[mid].color;
@@ -120,7 +122,7 @@ public class Main {
     static int score() {
         int result = 0;
         
-        for(int i = 0 ; i < Q; i++) {
+        for(int i = 0 ; i < MAX_ID; i++) {
             if(nodes[i] == null) continue;
             colorMap = new HashMap<>();
             colorCount(i);
