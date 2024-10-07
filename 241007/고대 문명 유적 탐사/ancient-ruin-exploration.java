@@ -24,6 +24,7 @@ public class Main {
 			if (this.y == o.y) {
 				return o.x - this.x; // 2. 행을 기준으로 내림차순
 			}
+			
 			return this.y - o.y; // 1. 열을 기준으로 오름차순
 		}
 	}
@@ -41,13 +42,22 @@ public class Main {
 			this.rotate = rotate;
 		}
   
-        @Override
-        public int compareTo(Node o) {
-            if (o.score != score) return Integer.compare(o.score, score);
-            if (rotate != o.rotate) return Integer.compare(rotate, o.rotate);
-            if (x != o.x) return Integer.compare(x, o.x);
-            return Integer.compare(y, o.y);
-        }
+		@Override
+		public int compareTo(Node o) {
+			if (this.score == o.score) {
+				if (this.rotate == o.rotate) {
+					if (this.y == o.y) {
+						return this.x - o.x; // 4. 행을 기준으로 오름차순
+					}
+					
+					return this.y - o.y; // 3. 열을 기준으로 오름차순
+				}
+				
+				return this.rotate - o.rotate; // 2. 각도 기준으로 오름차순
+			}
+			
+			return o.score - this.score; // 1. 점수 기준으로 내림차순
+		}
 	}
 	
 	static int[] dx = {-1, 1, 0, 0};
@@ -89,7 +99,7 @@ public class Main {
         	bonus.add(Integer.parseInt(st.nextToken()));
         }
 
-        for (int t = 0; t < K; t++) { //K번 시도
+        for (int t = 0; t < K; t++) {
         	ArrayList<Node> candidate = new ArrayList<>();
         	
         	// 중심 좌표를 기준으로 90, 180, 270도 회전
