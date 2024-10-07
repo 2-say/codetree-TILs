@@ -1,182 +1,248 @@
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.StringTokenizer;
 
 public class Main {
-    static int[][] map = new int[5][5];
-    static int[] wall;
-    static int lastIdx = 0; 
-    static boolean[][] visited;
-    static PriorityQueue<RotateGoal> pq;
-    static int answer = 0;
+	
+	static class Pair implements Comparable<Pair> {
+		int x;
+		int y;
+		
+		public Pair(int x, int y) {
+			this.x = x;
+			this.y = y;
+		}
 
-    static class RotateGoal implements Comparable<RotateGoal> {
-        int cost;
-        int degree;
-        int y; 
-        int x;
-        List<int[]> points;
-
-        RotateGoal(int cost, int degree, int y, int x, List<int[]> points) {
-            this.cost = cost;
-            this.degree = degree;
-            this.y = y;
-            this.x = x;
-            this.points = points;
-        }
-
+		@Override
+		public int compareTo(Pair o) {
+			if (this.y == o.y) {
+				return o.x - this.x; // 2. 행을 기준으로 내림차순
+			}
+			return this.y - o.y; // 1. 열을 기준으로 오름차순
+		}
+	}
+	
+	static class Node implements Comparable<Node> {
+		int x;
+		int y;
+		int score;
+		int rotate;
+		
+		public Node(int x, int y, int score, int rotate) {
+			this.x = x;
+			this.y = y;
+			this.score = score;
+			this.rotate = rotate;
+		}
+  
         @Override
-        public int compareTo(RotateGoal o) {
-            if (o.cost != cost) return Integer.compare(o.cost, cost);
-            if (degree != o.degree) return Integer.compare(degree, o.degree);
+        public int compareTo(Node o) {
+            if (o.score != score) return Integer.compare(o.score, score);
+            if (rotate != o.rotate) return Integer.compare(rotate, o.rotate);
             if (x != o.x) return Integer.compare(x, o.x);
             return Integer.compare(y, o.y);
         }
-    }
+	}
+	
+	static int[] dx = {-1, 1, 0, 0};
+	static int[] dy = {0, 0, -1, 1}; 
+	
+	static int K, M;
+	static int[][] map;
+	static int[][] newMap;
+	
+	static ArrayList<Node> candidate; // 후보 중심 좌표 저장
+	
+	static Queue<Integer> bonus;
+	static PriorityQueue<Pair> remove; // 사라지는 유물 좌표 저장 (우선순위에 따라 유물이 채워지기 때문에 우선순위 큐 사용)
+	
+	static int[] answer;
 
-    public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         StringTokenizer st = new StringTokenizer(br.readLine());
-        int K = Integer.parseInt(st.nextToken());
-        int M = Integer.parseInt(st.nextToken());
-
+        
+        K = Integer.parseInt(st.nextToken());
+        M = Integer.parseInt(st.nextToken());
+        
+        map = new int[5][5];
+        answer = new int[K];
+        
         for (int i = 0; i < 5; i++) {
-            map[i] = Arrays.stream(br.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
+        	st = new StringTokenizer(br.readLine());
+        	
+        	for (int j = 0; j < 5; j++) {
+        		map[i][j] = Integer.parseInt(st.nextToken());
+        	}
         }
-        wall = Arrays.stream(br.readLine().split(" ")).mapToInt(Integer::parseInt).toArray();
-
-        solve(K);
-    }
-
-    static void solve(int k) {
-        while (k-- > 0) {
-            pq = new PriorityQueue<>();
-            answer = 0;
-
-            if (!adventure()) break;
-
-            while (true) {
-                for (int j = 0; j < 5; j++) {
-                    for (int i = 4; i >= 0; i--) {
-                        if (map[i][j] == -1) {
-                            map[i][j] = wall[lastIdx++];
-                        }
-                    }
-                }
-
-                List<int[]> removable = new ArrayList<>();
-                visited = new boolean[5][5];
-
-                for (int i = 0; i < 5; i++) {
-                    for (int j = 0; j < 5; j++) {
-                        if (!visited[i][j]) {
-                            removable.addAll(dfs(i, j, map[i][j], map));
-                        }
-                    }
-                }
-
-                if (removable.isEmpty()) break;
-                answer += removable.size();
-                for (int[] p : removable) map[p[0]][p[1]] = -1; // Empty space
-            }
-
-            System.out.print(answer + " ");
-        }
-    }
-
-    static boolean adventure() {
-        for (int i = 1; i < 4; i++) {
-            for (int j = 1; j < 4; j++) {
-                int[][] tmp = new int[5][5];
-                for (int k = 0; k < 5; k++) {
-                    tmp[k] = map[k].clone();
-                }
-                for (int degree = 0; degree < 3; degree++) {
-                    calculatePrice(degree, i, j, tmp);
-                }
-            }
+        
+        bonus = new LinkedList<>();
+        st = new StringTokenizer(br.readLine());
+        
+        for (int i = 0; i < M; i++) {
+        	bonus.add(Integer.parseInt(st.nextToken()));
         }
 
-        RotateGoal r = pq.poll();
-        if (r == null) return false;
-
-        rotate(map, r.degree, r.y, r.x);
-        answer += r.cost;
-        for (int[] p : r.points) map[p[0]][p[1]] = -1; // Empty space
-        return answer > 0;
-    }
-
-    static void calculatePrice(int degree, int y, int x, int[][] tmp) {
-        rotate(tmp, degree, y, x);
-
-        List<int[]> all = new ArrayList<>();
-        visited = new boolean[5][5];
-
-        int result = 0;
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
-                if (!visited[i][j]) {
-                    List<int[]> lit = dfs(i, j, tmp[i][j], tmp);
-                    result += lit.size();
-                    all.addAll(lit);
-                }
-            }
+        for (int t = 0; t < K; t++) { //K번 시도
+        	ArrayList<Node> candidate = new ArrayList<>();
+        	
+        	// 중심 좌표를 기준으로 90, 180, 270도 회전
+        	for (int cnt = 1; cnt <= 3; cnt++) {
+        		for (int i = 1; i <= 3; i++) {
+        			for (int j = 1; j <= 3; j++) {
+        				rotateMap(i - 1, j - 1, cnt);
+        				int score = bfs(newMap);
+        				
+        				// 유물을 획득하는 경우에만 후보 리스트에 추가
+        				if (score > 0) {
+        					candidate.add(new Node(i, j, score, cnt));
+        				}
+        			}
+        		}
+        	}
+        	
+        	// 유물을 획득할 수 없는 경우 그 즉시 탐사 종료
+        	if (candidate.isEmpty()) {
+        		break;
+        	}
+        	
+        	Collections.sort(candidate); // 정렬을 통해 회전시킬 중심 좌표 구하기
+        	
+        	// 중심 좌표
+        	Node best = candidate.get(0);
+        	int sx = best.x;
+        	int sy = best.y;
+        	
+        	rotateMap(sx - 1, sy - 1, best.rotate);
+        	map = newMap; // 원본 맵 수정
+        	
+        	int score = bfs(map);
+        	int sum = 0;
+        	
+        	// 점수를 더이상 획득할 수 없을 때까지 진행
+        	while (score > 0) {
+        		fillMap();
+        		sum += score;
+        		
+        		score = bfs(map);
+        	}
+        	
+        	// 해당 턴에 얻은 유물의 가치 총합 저장
+        	answer[t] = sum;
         }
-        pq.add(new RotateGoal(result, degree, y, x, all));
-    }
-
-    static List<int[]> dfs(int y, int x, int color, int[][] map) {
-        List<int[]> points = new ArrayList<>();
-        Stack<int[]> stack = new Stack<>();
-        stack.push(new int[]{y, x});
-        visited[y][x] = true;
-
-        while (!stack.isEmpty()) {
-            int[] cur = stack.pop();
-            points.add(cur);
-
-            int[] dx = {1, -1, 0, 0};
-            int[] dy = {0, 0, 1, -1};
-
-            for (int i = 0; i < 4; i++) {
-                int nY = cur[0] + dy[i];
-                int nX = cur[1] + dx[i];
-
-                if (nY >= 0 && nX >= 0 && nY < 5 && nX < 5 && !visited[nY][nX] && map[nY][nX] == color) {
-                    visited[nY][nX] = true;
-                    stack.push(new int[]{nY, nX});
-                }
-            }
+        
+        for (int n : answer) {
+        	// 0이 나오는 경우는 유물을 획득할 수 없어서 중단된 경우임 -> 더이상 출력하지 않음
+        	if (n == 0) {
+        		break;
+        	}
+        	
+        	System.out.print(n + " ");
         }
-        return points.size() >= 3 ? points : Collections.emptyList();
-    }
+	}
 
-    static void rotate(int[][] arr, int degree, int y, int x) {
-        int[][] copy = new int[3][3];
+	private static void rotateMap(int sx, int sy, int cnt) {
+		newMap = new int[5][5];
+		
+		for (int i = 0; i < 5; i++) {
+			for (int j = 0; j < 5; j++) {
+				newMap[i][j] = map[i][j];
+			}
+		}
+		
+		for (int i = sx; i < sx + 3; i++) {
+			for (int j = sy; j < sy + 3; j++) {
+				int ox = i - sx;
+				int oy = j - sy;
+				
+				int rx = oy;
+				int ry = 3 - ox - 1;
+				
+				if (cnt == 1) { // 90도 회전
+					rx = oy;
+					ry = 3 - ox - 1;
+				} else if (cnt == 2) { // 180도 회전
+					rx = 3 - ox - 1;
+					ry = 3 - oy - 1;
+				} else { // 270도 회전
+					rx = 3 - oy - 1;
+					ry = ox;
+				}
+				
+				newMap[rx + sx][ry + sy] = map[i][j];
+			}
+		}
+	}
+	
+	// 상하좌우 인접한 유물 조각 획득
+	private static int bfs(int[][] arr) {
+		boolean[][] visited = new boolean[5][5];
+		Queue<Pair> q = new LinkedList<>();
+		
+		// 사라지는 유물 저장 (bfs 돌릴 때마다 새로 저장)
+		remove = new PriorityQueue<>();
+		
+		for (int i = 0; i < 5; i++) {
+			for (int j = 0; j < 5; j++) {
+				if (!visited[i][j]) {
+					q.add(new Pair(i, j));
+					visited[i][j] = true;
+					
+					ArrayList<Pair> list = new ArrayList<>();
+					
+					int cnt = 1;
+					list.add(new Pair(i, j));
+					
+					while (!q.isEmpty()) {
+						Pair cur = q.poll();
+						
+						for (int d = 0; d < 4; d++) {
+							int nx = cur.x + dx[d];
+							int ny = cur.y + dy[d];
+							
+							// 범위 벗어나거나 이미 방문한 경우 다음으로 넘어감
+							if (!isRange(nx, ny) || visited[nx][ny]) {
+								continue;
+							}
+							
+							// 시작점과 같은 유물 조각인 경우
+							if (arr[nx][ny] == arr[i][j]) {
+								q.add(new Pair(nx, ny));
+								visited[nx][ny] = true;
+								
+								cnt++;
+								list.add(new Pair(nx, ny));
+							}
+						}
+					}
+					
+					if (cnt >= 3) {
+						remove.addAll(list);
+					}
+				}
+			}
+		}
+		
+		return remove.size();
+	}
+	
+	// 사라진 유물 조각 칸에 새로운 유물 채워넣음
+	private static void fillMap() {
+		while (!remove.isEmpty()) {
+			Pair cur = remove.poll();
+			
+			map[cur.x][cur.y] = bonus.poll();
+		}
+	}
+	
+	private static boolean isRange(int x, int y) {
+		return x >= 0 && x < 5 && y >= 0 && y < 5;
+	}
 
-        if (degree == 0) { // 90 degrees
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    copy[j][2 - i] = arr[y - 1 + i][x - 1 + j];
-                }
-            }
-        } else if (degree == 1) { // 180 degrees
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    copy[2 - i][2 - j] = arr[y - 1 + i][x - 1 + j];
-                }
-            }
-        } else if (degree == 2) { // 270 degrees
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    copy[2 - j][i] = arr[y - 1 + i][x - 1 + j];
-                }
-            }
-        }
-
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                arr[y - 1 + i][x - 1 + j] = copy[i][j];
-            }
-        }
-    }
 }
