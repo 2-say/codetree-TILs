@@ -62,12 +62,12 @@ public class Main {
 		for (int i = 1; i <= K; i++) {
 			// 공격자 선정
 			Top[] t = findAttacker();
-			
+
 			// 공격
 			attack(t, i);
-			
+
 			// 포탑 남아있는지 확인
-			// 포탑개수 2개 이하면 종료
+			// 포탑개수 1개 이하면 종료
 			if (!isLeftTop())
 				break;
 
@@ -75,6 +75,15 @@ public class Main {
 			topRepair();
 		}
 
+		// 최고값 출력
+		ans = Integer.MIN_VALUE;
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < M; j++) {
+				if (map[i][j] > 0) {
+					ans = Math.max(map[i][j], ans);
+				}
+			}
+		}
 		System.out.println(ans);
 
 	}
@@ -87,7 +96,7 @@ public class Main {
 				}
 			}
 		}
-		
+
 		for (Top tp : tops) {
 			int at = map[tp.y][tp.x];
 			tp.atk = at;
@@ -100,7 +109,6 @@ public class Main {
 			for (int j = 0; j < M; j++) {
 				if (map[i][j] > 0) {
 					count++;
-					ans =  Math.max(map[i][j], ans);
 				}
 			}
 		}
@@ -111,16 +119,17 @@ public class Main {
 		notAttack = new boolean[N][M];
 		// 레이저 방법 가능 여부 보기
 		List<int[]> paths = bfs(t[0].y, t[0].x, t[1].y, t[1].x);
-		
+
 		int attackP = t[0].atk + N + M;
 		map[t[0].y][t[0].x] = attackP;
 
 		// 레이저 방법 공격
 		if (!paths.isEmpty()) {
 			for (int[] p : paths) {
-				if(p[0] == t[0].y && p[1] == t[0].x) continue; //공격자라면 제외
-				
 				notAttack[p[0]][p[1]] = true;
+
+				if (p[0] == t[0].y && p[1] == t[0].x)
+					continue; // 공격자라면 제외
 				if (p[0] == t[1].y && p[1] == t[1].x) { // 공격 대상이면
 					map[p[0]][p[1]] -= attackP;
 				} else { // 아니면
@@ -129,12 +138,16 @@ public class Main {
 			}
 		} else { // 포탄 공격시도
 			map[t[1].y][t[1].x] -= attackP;
+			notAttack[t[1].y][t[1].x] = true;
+			notAttack[t[0].y][t[0].x] = true;
 
 			for (int i = 0; i < 8; i++) { // 8방향 공격
-				int ny = (t[1].y + dy[i]+ N) % (N);
-				int nx = (t[1].x + dx[i]+ M) % (M);
-				if(ny == t[0].y && nx == t[0].x) continue; //공격자 제외
+				int ny = (t[1].y + dy[i] + N) % (N);
+				int nx = (t[1].x + dx[i] + M) % (M);
+
 				notAttack[ny][nx] = true;
+				if (ny == t[0].y && nx == t[0].x)
+					continue; // 공격자 제외
 				map[ny][nx] -= (attackP / 2);
 			}
 		}
@@ -159,7 +172,10 @@ public class Main {
 	private static List<int[]> bfs(int sy, int sx, int ey, int ex) {
 		Queue<P> q = new ArrayDeque<>();
 		visited = new boolean[N][M];
-		q.add(new P(sy, sx, new ArrayList<>()));
+		int[] init = new int[] { sy, sx };
+		List<int[]> initL = new ArrayList<>();
+		initL.add(init);
+		q.add(new P(sy, sx, initL));
 		visited[sy][sx] = true;
 
 		while (!q.isEmpty()) {
@@ -171,8 +187,7 @@ public class Main {
 
 			for (int i = 0; i < 4; i++) {
 				int ny = (cur.y + dy[i] + N) % (N);
-				int nx = (cur.x + dx[i]+ M) % (M);
-				
+				int nx = (cur.x + dx[i] + M) % (M);
 
 				if (isValid(ny, nx)) {
 					visited[ny][nx] = true;
@@ -188,7 +203,7 @@ public class Main {
 	}
 
 	private static boolean isValid(int y, int x) {
-		return x >=0 && y>= 0 && x < M && y < N && map[y][x] > 0 && !visited[y][x];
+		return x >= 0 && y >= 0 && x < M && y < N && map[y][x] > 0 && !visited[y][x];
 	}
 
 	private static Top[] findAttacker() {
@@ -199,8 +214,8 @@ public class Main {
 			if (t.lastAttackTime != o.lastAttackTime)
 				return Integer.compare(o.lastAttackTime, t.lastAttackTime);
 			if (t.y + t.x != o.y + o.x)
-				return Integer.compare(t.y + t.x, o.y + o.x);
-			return Integer.compare(t.x, o.x);
+				return Integer.compare(o.y + o.x, t.y + t.x);
+			return Integer.compare(o.x, t.x);
 		});
 
 		// 공격력이 0이상인것들중에서만 선택
