@@ -152,7 +152,7 @@ public class Main {
 			}
 		}
 
-		// 공격후 0보다 작은 친구들은 0으로 수정해주기 && tops 리스트 공격력 업데이트
+		// 공격후 0보다 작은 친구들은 0으로 수정해주기
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < M; j++) {
 				if (map[i][j] < 0)
@@ -160,13 +160,19 @@ public class Main {
 			}
 		}
 
+		//tops 리스트 공격력 업데이트 && 제외
+		Queue<Top> removes = new ArrayDeque<>();
 		for (Top tp : tops) {
 			int at = map[tp.y][tp.x];
 			tp.atk = at;
+			if(at == 0) {
+				removes.add(tp);
+			}
 		}
+		
+		while(!removes.isEmpty()) tops.remove(removes.poll());
 
 		t[0].lastAttackTime = time;
-		t[1].lastAttackTime = time;
 	}
 
 	private static List<int[]> bfs(int sy, int sx, int ey, int ex) {
