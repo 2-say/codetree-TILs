@@ -7,6 +7,7 @@ public class Main {
 	static int[][] map;
 	static boolean[][] notMove;
 	static int[] dy = { -1, 0, 0, 1 }, dx = { 0, -1, 1, 0 };
+	static int afterGoBasecampC = 0;
 
 	static List<P> stores = new ArrayList<>();
 	static List<P> persons = new ArrayList<>(); // 0번부터 ~ m-1번까지 유지
@@ -66,8 +67,9 @@ public class Main {
 			checkArrive();
 
 			// 3. 베이스캠프 이동 - BFS
-			goBasecamp(time);
-
+			if(afterGoBasecampC < m) //모두 베이스캠프 이동하면 함수 실행 x
+				goBasecamp(time);
+			
 			// 모두 도착했는지 파악 종료 조건
 			if (checkAllArrive())
 				break;
@@ -100,6 +102,7 @@ public class Main {
 				p.y = yx[0];
 				p.x = yx[1];
 				notMove[p.y][p.x] = true;
+				afterGoBasecampC++;
 			}
 		}
 
@@ -144,7 +147,7 @@ public class Main {
 	}
 
 	static void movePerson(int time) {
-		// 움직일 수 있는 사람찾기
+		// 움직일 수 있는 사람찾기 O(M)
 		for (int i = 0; i < persons.size(); i++) {
 			P p = persons.get(i);
 
