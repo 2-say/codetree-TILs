@@ -60,19 +60,41 @@ public class Main {
 		while (true) {
 			time++;
 			
-			// 1. 사람들 move
-			movePerson(time);
-
-			// 2. 편의점 방문 처리
-			checkArrive();
-
-			// 3. 베이스캠프 이동 - BFS
-			if(afterGoBasecampC < m) //모두 베이스캠프 이동하면 함수 실행 x
-				goBasecamp(time);
+			List<int[]> baseCampP = new ArrayList<>();
+			// 사람들 한명씩 순회
+			for (int i = 0; i < m; i++) {
+				P p = persons.get(i);
+				P s = stores.get(i);
+				// 1. 사람들 move
+				movePerson(p, s, time);
+				
+				// 3. 베이스캠프 이동 - BFS
+				if (afterGoBasecampC < m) { // 모두 베이스캠프 이동하면 함수 실행 x
+					int[] re = goBasecamp(p, s, time);
+					if(re!= null) baseCampP.add(re);
+				}
+					
+			}
 			
+			for(int i = 0; i < m; i++) {
+				P p = persons.get(i);
+				P s = stores.get(i);
+				checkArrive(p, s); //편의점 이동 처리
+				
+				//베이스 캠프 이동처리
+				if(!baseCampP.isEmpty()) {
+					for(int[] yx : baseCampP) {
+						notMove[yx[0]][yx[1]] = true;
+					}
+				}
+			}
+			
+			
+
 			// 모두 도착했는지 파악 종료 조건
 			if (checkAllArrive())
 				break;
+
 		}
 
 		System.out.println(time);
@@ -88,24 +110,18 @@ public class Main {
 		return true;
 	}
 
-	private static void goBasecamp(int time) {
-		// 베이스 캠프 이동할 사람 고르기
-		for (int i = 0; i < m; i++) {
-			P p = persons.get(i);
-
-			if (p.y == -1 && p.x == -1 && time >= p.moveTime) { // 베이스 캠프 이동 가능 조건
-				P s = stores.get(i);
-				// 거리가까운 베이스캠프자리 찾기
-				int[] yx = bfs(s); // 출발지는 해당 편의점 도착지는 가까운 1 -> visited가 가능한곳
-
-				// 이동처리
-				p.y = yx[0];
-				p.x = yx[1];
-				notMove[p.y][p.x] = true;
-				afterGoBasecampC++;
-			}
+	private static int[] goBasecamp(P p, P s, int time) {
+		if (p.y == -1 && p.x == -1 && time >= p.moveTime) { // 베이스 캠프 이동 가능 조건
+			// 거리가까운 베이스캠프자리 찾기
+			int[] yx = bfs(s); // 출발지는 해당 편의점 도착지는 가까운 1 -> visited가 가능한곳
+			// 이동처리
+			p.y = yx[0];
+			p.x = yx[1];
+			afterGoBasecampC++;
+			return new int[] {p.y, p.x};
 		}
-
+		
+		return null;
 	}
 
 	private static int[] bfs(P s) {
@@ -133,33 +149,19 @@ public class Main {
 		return null;
 	}
 
-	private static void checkArrive() {
-		for (int i = 0; i < m; i++) {
-			P p = persons.get(i);
-			P s = stores.get(i);
-
-			if (p.y == s.y && p.x == s.x) {
-				notMove[p.y][p.x] = true;
-				p.arrive = true;
-			}
-				
+	private static void checkArrive(P p, P s) {
+		if (p.y == s.y && p.x == s.x) {
+			notMove[p.y][p.x] = true;
+			p.arrive = true;
 		}
 	}
 
-	static void movePerson(int time) {
-		// 움직일 수 있는 사람찾기 O(M)
-		for (int i = 0; i < persons.size(); i++) {
-			P p = persons.get(i);
-
-			if (p.y != -1 && p.x != -1 && !p.arrive) {
-				P s = stores.get(i);
-
-				int[] yx = foundMoveClose(p, s);
-				p.y = yx[0]; // 이동 처리
-				p.x = yx[1];
-			}
+	static void movePerson(P p, P s, int time) {
+		if (p.y != -1 && p.x != -1 && !p.arrive) {
+			int[] yx = foundMoveClose(p, s);
+			p.y = yx[0]; // 이동 처리
+			p.x = yx[1];
 		}
-
 	}
 
 	private static int[] foundMoveClose(Main.P p, Main.P store) {
@@ -187,6 +189,7 @@ public class Main {
 				return new int[] { ny, nx };
 			}
 		}
+
 		return null; // 없음 표시
 	}
 
