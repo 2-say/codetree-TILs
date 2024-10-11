@@ -59,36 +59,29 @@ public class Main {
 		int time = 0;
 		while (true) {
 			time++;
-			
-			List<int[]> baseCampP = new ArrayList<>();
+
 			// 사람들 한명씩 순회
 			for (int i = 0; i < m; i++) {
 				P p = persons.get(i);
 				P s = stores.get(i);
 				// 1. 사람들 move
 				movePerson(p, s, time);
-				
-				// 3. 베이스캠프 이동 - BFS
-				if (afterGoBasecampC < m) { // 모두 베이스캠프 이동하면 함수 실행 x
-					int[] re = goBasecamp(p, s, time);
-					if(re!= null) baseCampP.add(re);
-				}
-					
 			}
+		
 			
 			for(int i = 0; i < m; i++) {
 				P p = persons.get(i);
 				P s = stores.get(i);
 				checkArrive(p, s); //편의점 이동 처리
-				
-				//베이스 캠프 이동처리
-				if(!baseCampP.isEmpty()) {
-					for(int[] yx : baseCampP) {
-						notMove[yx[0]][yx[1]] = true;
-					}
-				}
 			}
 			
+			
+			for(int i = 0; i < m; i++) {
+				P p = persons.get(i);
+				P s = stores.get(i);
+				if (afterGoBasecampC < m) // 모두 베이스캠프 이동하면 함수 실행 x
+					goBasecamp(p, s, time);
+			}
 			
 
 			// 모두 도착했는지 파악 종료 조건
@@ -110,18 +103,17 @@ public class Main {
 		return true;
 	}
 
-	private static int[] goBasecamp(P p, P s, int time) {
+	private static void goBasecamp(P p, P s, int time) {
 		if (p.y == -1 && p.x == -1 && time >= p.moveTime) { // 베이스 캠프 이동 가능 조건
 			// 거리가까운 베이스캠프자리 찾기
 			int[] yx = bfs(s); // 출발지는 해당 편의점 도착지는 가까운 1 -> visited가 가능한곳
+
 			// 이동처리
 			p.y = yx[0];
 			p.x = yx[1];
+			notMove[p.y][p.x] = true;
 			afterGoBasecampC++;
-			return new int[] {p.y, p.x};
 		}
-		
-		return null;
 	}
 
 	private static int[] bfs(P s) {
