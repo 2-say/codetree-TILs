@@ -8,7 +8,7 @@ public class Main {
     static int K, M;
     static Queue<Integer> wallQ = new ArrayDeque<>();
     static PriorityQueue<RotateBest> pq = new PriorityQueue<>();
-    static int[] dy = { 0, 0, 1, -1 }, dx = { 1, -1, 0, 0 };
+    static int[] dy = {0, 1, 0, -1}, dx = {1, 0, -1, 0};
     static int answer = 0;
 
     static class RotateBest implements Comparable<RotateBest> {
@@ -68,13 +68,13 @@ public class Main {
             findRotate();
             RotateBest r = pq.poll();
 
-            if(r.founds.isEmpty()) break; //아무것도 구할 수 없으면 바로 종료
+            if (r.founds.isEmpty())
+                break; // 아무것도 구할 수 없으면 바로 종료
 
             // 맵에 반영하고 정답 기록하기
             map = r.newMap;
-            for (int[] yx : r.founds) {
+            for (int[] yx : r.founds)
                 map[yx[0]][yx[1]] = 0;
-            }
             answer += r.cost;
 
             while (true) {
@@ -92,15 +92,13 @@ public class Main {
                     }
                 }
 
-                if (founds.isEmpty()) {
+                if (founds.isEmpty())
                     break;
-                } else {
-                    answer += founds.size();
-                    for (int[] yx : founds) {
-                        map[yx[0]][yx[1]] = 0;
-                    }
-                }
 
+                answer += founds.size();
+                for (int[] yx : founds) {
+                    map[yx[0]][yx[1]] = 0;
+                }
             }
 
             System.out.print(answer + " ");
@@ -110,7 +108,7 @@ public class Main {
 
     private static void refill() {
         for (int i = 0; i < 5; i++) {
-            for (int j = 4; j >=0; j--) {
+            for (int j = 4; j >= 0; j--) {
                 if (map[j][i] == 0) {
                     map[j][i] = wallQ.poll();
                 }
@@ -131,54 +129,60 @@ public class Main {
     }
 
     private static void rotate(int y, int x, int degree) {
-        // 맵 복제
-        int[][] rotatedMap = new int[5][5];
-        for (int i = 0; i < 5; i++)
-            rotatedMap[i] = map[i].clone();
+        int[][] copy = new int[3][3];
+		int[][] rotateArr = new int[5][5];
 
-        for (int c = 0; c <= degree; c++) {
-            // (i, j) 좌표를 오른쪽 90도 회전시킴
-            for (int i = y - 1; i <= y + 1; i++) {
-                for (int j = x - 1; j <= x + 1; j++) {
-                    // 기존 좌표 (i, j)를 기준으로 회전된 좌표 계산
-                    int newJ = y + (j - x); // 회전된 행 좌표
-                    int newI = x - (i - y); // 회전된 열 좌표
-                    // 회전된 위치에 원래 값을 할당
-                    rotatedMap[newJ][newI] = map[i][j];
-                }
-            }
-        }
+		for (int i = 0; i < 5; ++i) {
+			for (int j = 0; j < 5; ++j)
+				rotateArr[i][j] = map[i][j];
+		}
+
+		for (int i = 0; i < 3; ++i) {
+			for (int j = 0; j < 3; ++j)
+				if (degree == 0) // 90도 회전
+					copy[i][j] = map[3 - j + y - 2][i + x - 1];
+				else if (degree == 1) // 180도 회전
+					copy[i][j] = map[3 - i + y - 2][3 - j + x - 2];
+				else // 270도 회전
+					copy[i][j] = map[j + y - 1][3 - i + x - 2];
+		}
+
+		for (int i = 0; i < 3; ++i) {
+			for (int j = 0; j < 3; ++j)
+				rotateArr[i + y - 1][j + x - 1] = copy[i][j];
+		}
 
         // 가치 판단
         List<int[]> founds = new ArrayList<>();
         visited = new boolean[5][5];
         for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 5; j++) {
-                if (!visited[i][j] && rotatedMap[i][j] != 0) {
-                    founds.addAll(bfs(rotatedMap[i][j], i, j, rotatedMap));
+                if (!visited[i][j] && rotateArr[i][j] != 0) {
+                    founds.addAll(bfs(rotateArr[i][j], i, j, rotateArr));
                 }
             }
         }
-   
-        pq.add(new RotateBest(founds.size(), y, x, degree, founds, rotatedMap));
+
+        pq.add(new RotateBest(founds.size(), y, x, degree, founds, rotateArr));
     }
 
     private static List<int[]> bfs(int color, int y, int x, int[][] tmp) {
         List<int[]> record = new ArrayList<>();
         Queue<int[]> q = new ArrayDeque<>();
         q.add(new int[] { y, x });
+        record.add(new int[]{y,x});
         visited[y][x] = true;
 
         while (!q.isEmpty()) {
             int[] cur = q.poll();
-            record.add(new int[]{cur[0], cur[1]}); // 경로 기록
-
+            
             for (int i = 0; i < 4; i++) {
                 int ny = cur[0] + dy[i];
                 int nx = cur[1] + dx[i];
 
                 if (inRange(ny, nx) && !visited[ny][nx] && tmp[ny][nx] == color) {
                     visited[ny][nx] = true;
+                    record.add(new int[] { ny, nx }); // 경로 기록
                     q.add(new int[] { ny, nx });
                 }
             }
