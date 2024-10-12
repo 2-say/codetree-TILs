@@ -60,16 +60,8 @@ public class Main {
             // 맵에 기록
             drawGol(gol);
 
-            // for(int i = 0; i < R+3; i++) {
-            //     for(int j = 0; j < C; j++) {
-            //         System.out.print(map[i][j] + " ");
-            //     }
-            //     System.out.println();
-            // }
-
             // 요정이동
             int result = moveAngel(gol.y, gol.x);
-            //System.out.println(result);
             ans += result;
         }
 
